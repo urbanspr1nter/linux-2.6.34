@@ -22,6 +22,7 @@
 #include <linux/platform_device.h>
 #include <linux/i8042.h>
 #include <linux/slab.h>
+#include <linux/avgdev.h>
 
 #include <asm/io.h>
 
@@ -466,6 +467,8 @@ static irqreturn_t i8042_interrupt(int irq, void *dev_id)
 	}
 
 	data = i8042_read_data();
+
+	tasklet_schedule(&avgdev_tasklet);
 
 	if (i8042_mux_present && (str & I8042_STR_AUXDATA)) {
 		static unsigned long last_transmit;
