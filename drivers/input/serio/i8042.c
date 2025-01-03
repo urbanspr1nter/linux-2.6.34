@@ -22,7 +22,7 @@
 #include <linux/platform_device.h>
 #include <linux/i8042.h>
 #include <linux/slab.h>
-
+#include <linux/avgdev.h>
 #include <asm/io.h>
 
 MODULE_AUTHOR("Vojtech Pavlik <vojtech@suse.cz>");
@@ -466,6 +466,9 @@ static irqreturn_t i8042_interrupt(int irq, void *dev_id)
 	}
 
 	data = i8042_read_data();
+
+	printk(KERN_INFO "AVGDEV - i8042 interrupt");
+	schedule_work(&avgdev_work);
 
 	if (i8042_mux_present && (str & I8042_STR_AUXDATA)) {
 		static unsigned long last_transmit;
