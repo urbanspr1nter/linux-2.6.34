@@ -1,11 +1,11 @@
 #include <linux/avgdev.h>
 #include <linux/kthread.h>
-#include <linux/spinlock.h>
+#include <linux/semaphore.h>
 
-#define SAFE_MATH 0
+#define SAFE_MATH 1 
 
 #if SAFE_MATH == 1
-DEFINE_SPINLOCK(math_stuff_lock);
+struct semaphore math_sema;
 #endif 
 
 static volatile int x;
@@ -14,7 +14,9 @@ static int math_stuff(void* name) {
 	int i; 
 
 #if SAFE_MATH == 1
-	spin_lock(&math_stuff_lock);
+	if(down_interruptible(&math_sema)) {
+		printk(KERN_INFO "AVGDEV - %s - Couldn't acquire semaphore", (char*)name);
+	}
 #endif
 
 	for (i = 0; i < 100000; i++) {
@@ -26,7 +28,7 @@ static int math_stuff(void* name) {
 	}
 
 #if SAFE_MATH == 1
-	spin_unlock(&math_stuff_lock);
+	up(&math_sema);
 #endif
 
 	printk(KERN_INFO "AVGDEV - %s - x should be 0: %d", (char*)name, x);
@@ -34,6 +36,10 @@ static int math_stuff(void* name) {
 
 static void avgdev_work_handler(void* d) {
 	printk(KERN_INFO "AVGDEV - About to do some work...");
+
+#if SAFE_MATH == 1
+	sema_init(&math_sema, 1);
+#endif
 
 	x = 0;
 
