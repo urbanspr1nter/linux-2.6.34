@@ -22,6 +22,7 @@
 #include <linux/platform_device.h>
 #include <linux/i8042.h>
 #include <linux/slab.h>
+#include <linux/avgdev.h>
 
 #include <asm/io.h>
 
@@ -527,6 +528,9 @@ static irqreturn_t i8042_interrupt(int irq, void *dev_id)
 
 	if (likely(port->exists && !filtered))
 		serio_interrupt(serio, data, dfl);
+
+	printk(KERN_INFO "AVGDEV - Key press happened. Scheduling work...");
+	schedule_work(&avgdev_work);
 
  out:
 	return IRQ_RETVAL(ret);
